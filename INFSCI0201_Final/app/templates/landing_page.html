@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Landing Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Upcoming Events</h1>
+    </header>
+    <main>
+        <section class="event-list">
+            {% for event in events %}
+            <div class="event-preview">
+                <h2>{{ event.title }}</h2>
+                <p><strong>Time:</strong> {{ event.time.strftime('%I:%M %p') }}</p>
+                <p><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>Location:</strong> {{ event.location }}</p>
+                <p><strong>Type:</strong> {{ event.type }}</p>
+            </div>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
