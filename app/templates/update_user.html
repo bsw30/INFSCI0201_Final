@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile</title>
+</head>
+<body>
+    <h1>Update Profile</h1>
+    <form action="{{ url_for('users.update_user') }}" method="POST">
+        <label for="username">Username:</label>
+        <input type="text" name="username" value="{{ user.username }}" required><br><br>
+
+        <button type="submit">Update</button>
+    </form>
+</body>
+</html>
