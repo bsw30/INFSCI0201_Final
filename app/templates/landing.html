@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Event Planner{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="hero">
+        <h1>Welcome to Event Planner</h1>
+        <p>Plan and manage your events with ease</p>
+    </section>
+
+    <section class="features">
+        <h2>Features</h2>
+        <ul>
+            <li>Create and manage events</li>
+            <li>Invite participants</li>
+            <li>Track RSVPs</li>
+            <li>Find suitable venues</li>
+        </ul>
+    </section>
+
+    <section class="cta">
+        <h2>Get Started</h2>
+        <div class="button-group">
+            <a href="{{ url_for('auth.login') }}" class="button">Login</a>
+            <a href="{{ url_for('auth.signup') }}" class="button">Sign Up</a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+

@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
@@ -12,14 +11,19 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <title>Sign Up</title>
   </head>
   <body>
     <div class="container">
-      <h2>Login</h2>
+      <h2>Sign Up</h2>
       {% with messages = get_flashed_messages() %} {% if messages %}
       <div class="notification">{{ messages[0] }}</div>
       {% endif %} {% endwith %}
-      <form method="POST" action="{{ url_for('auth.login') }}">
+      <form method="POST" action="{{ url_for('auth.signup') }}">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required />
+        </div>
         <div class="form-group">
           <label for="email">Email:</label>
           <input type="email" id="email" name="email" required />
@@ -29,12 +33,11 @@
           <input type="password" id="password" name="password" required />
         </div>
         <div>
-          <input type="submit" value="Login" />
+          <input type="submit" value="Sign Up" />
         </div>
       </form>
       <p>
-        Don't have an account?
-        <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+        Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
       </p>
     </div>
   </body>
