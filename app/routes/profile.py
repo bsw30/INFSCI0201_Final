@@ -1,3 +1,4 @@
+# app/profile.py
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 from . import db
@@ -27,4 +28,3 @@ def update_profile():
         return redirect(url_for('profile.view_profile'))
 
     return render_template('update_profile.html', user=current_user)
-

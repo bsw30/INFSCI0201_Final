@@ -9,26 +9,43 @@
 <body>
     <header>
         <h1>Upcoming Events</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('events_bp.landing_page') }}">Home</a></li>
+                <li><a href="{{ url_for('events_bp.upcoming_events') }}">View All Events</a></li>
+            </ul>
+        </nav>
     </header>
+
     <main>
         <section class="event-list">
             {% if events %}
-                {% for event in events %}
+                <h2>Featured Events</h2>
                 <div class="event-preview">
-                    <h2>{{ event.title }}</h2>
-                    <p><strong>Time:</strong> {{ event.time.strftime('%I:%M %p') }}</p>
-                    <p><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
-                    <p><strong>Location:</strong> {{ event.location }}</p>
-                    <p><strong>Type:</strong> {{ event.type }}</p>
-                </div>
-                {% endfor %}
+                    {% for event in events %}
+                    <div class="event">
+                        <h4>{{ event.title }}</h4>
+                        <p><strong>Time:</strong>
+                            {% if event.time %}
+                                {{ event.time | slice(0, 5) }}  <!-- Displaying only the time part of the string -->
+                            {% else %}
+                                No Time Available
+                            {% endif %}
+                        </p>
+                        <p><strong>Date:</strong> {{ event.date }}</p>
+                        <p><strong>Location:</strong> {{ event.location }}</p>
+                        <p><strong>Type:</strong> {{ event.type }}</p>
+                        <a href="{{ url_for('events_bp.event_details', event_id=event['id']) }}">More Info</a>
+                    </div>
+                    {% endfor %}
             {% else %}
-                <p>No upcoming events available at the moment.</p>
+                <p>No upcoming events at the moment.</p>
             {% endif %}
         </section>
-        <section class="view-all">
-            <a href="{{ url_for('events.landing_page') }}">Back to Landing Page</a>
-        </section>
     </main>
+
+    <footer>
+        <p>&copy; 2024 Events Portal. All Rights Reserved.</p>
+    </footer>
 </body>
 </html>
