@@ -18,18 +18,15 @@ def index():
 @login_required
 def home():
     events = Event.query.order_by(Event.date).all()
-    return render_template('home.html', events=events)
+    return render_template('home.html', events=events, is_event_manager=current_user.is_event_manager())
 
 @main.route('/search')
 def search():
     query = request.args.get('query')
-    if query:
-        events = Event.query.filter(Event.title.ilike(f'%{query}%') | 
-                                    Event.description.ilike(f'%{query}%') |
-                                    Event.event_type.ilike(f'%{query}%') |
-                                    Event.tags.ilike(f'%{query}%')).all()
-    else:
-        events = []
+    events = Event.query.filter(Event.title.ilike(f'%{query}%') | 
+                                Event.description.ilike(f'%{query}%') |
+                                Event.event_type.ilike(f'%{query}%') |
+                                Event.tags.ilike(f'%{query}%')).all() if query else []
     return render_template('search_results.html', events=events, query=query)
 
 @main.route('/event/<int:event_id>')
@@ -37,7 +34,9 @@ def event_details(event_id):
     event = Event.query.get_or_404(event_id)
     is_attending = current_user.is_authenticated and event.is_user_attending(current_user)
     can_manage = current_user.is_authenticated and current_user.is_event_manager() and current_user.id == event.organizer_id
-    return render_template('event_details.html', event=event, current_time=datetime.now(), is_attending=is_attending, can_manage=can_manage)
+    registered_users = event.attendees.all() if can_manage else []
+    return render_template('event_details.html', event=event, current_time=datetime.now(), 
+                           is_attending=is_attending, can_manage=can_manage, registered_users=registered_users)
 
 @main.route('/event/<int:event_id>/signup', methods=['POST'])
 @login_required
@@ -63,51 +62,21 @@ def cancel_signup(event_id):
 @login_required
 def profile():
     current_time = datetime.now()
-    upcoming_events = Event.query.join(Event.attendees).filter(Event.attendees.any(id=current_user.id), Event.date > current_time).all()
-    past_events = Event.query.join(Event.attendees).filter(Event.attendees.any(id=current_user.id), Event.date <= current_time).all()
+    if current_user.is_event_manager():
+        upcoming_events = Event.query.filter_by(organizer_id=current_user.id).filter(Event.date > current_time).order_by(Event.date).all()
+        past_events = Event.query.filter_by(organizer_id=current_user.id).filter(Event.date <= current_time).order_by(Event.date.desc()).all()
+    else:
+        upcoming_events = Event.query.join(Event.attendees).filter(Event.attendees.any(id=current_user.id), Event.date > current_time).all()
+        past_events = Event.query.join(Event.attendees).filter(Event.attendees.any(id=current_user.id), Event.date <= current_time).all()
     return render_template('profile.html', upcoming_events=upcoming_events, past_events=past_events)
 
 @main.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        bio = request.form.get('bio')
-        current_password = request.form.get('current_password')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-
-        if not check_password_hash(current_user.password_hash, current_password):
-            flash('Current password is incorrect.', 'error')
-            return redirect(url_for('main.settings'))
-
-        if username != current_user.username and User.query.filter_by(username=username).first():
-            flash('Username already exists.', 'error')
-            return redirect(url_for('main.settings'))
-
-        if email != current_user.email and User.query.filter_by(email=email).first():
-            flash('Email already exists.', 'error')
-            return redirect(url_for('main.settings'))
-
-        current_user.username = username
-        current_user.email = email
-        current_user.first_name = first_name
-        current_user.last_name = last_name
-        current_user.bio = bio
-
-        if new_password:
-            if new_password != confirm_password:
-                flash('New passwords do not match.', 'error')
-                return redirect(url_for('main.settings'))
-            current_user.password_hash = generate_password_hash(new_password)
-
-        db.session.commit()
-        flash('Your settings have been updated.', 'success')
-        return redirect(url_for('main.profile'))
-
+        if update_user_settings(current_user, request.form):
+            flash('Your settings have been updated.', 'success')
+            return redirect(url_for('main.profile'))
     return render_template('settings.html')
 
 @main.route('/create_event', methods=['GET', 'POST'])
@@ -118,21 +87,10 @@ def create_event():
         return redirect(url_for('main.home'))
 
     if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description')
-        date = datetime.strptime(request.form.get('date'), '%Y-%m-%dT%H:%M')
-        location = request.form.get('location')
-        event_type = request.form.get('event_type')
-        tags = request.form.get('tags')
-        image_url = request.form.get('image_url')
-
-        new_event = Event(title=title, description=description, date=date, location=location,
-                          event_type=event_type, tags=tags, image_url=image_url, organizer_id=current_user.id)
-        db.session.add(new_event)
-        db.session.commit()
-
-        flash('Event created successfully.')
-        return redirect(url_for('main.event_details', event_id=new_event.id))
+        new_event = create_new_event(request.form, current_user.id)
+        if new_event:
+            flash('Event created successfully.')
+            return redirect(url_for('main.event_details', event_id=new_event.id))
 
     return render_template('create_event.html')
 
@@ -145,17 +103,9 @@ def edit_event(event_id):
         return redirect(url_for('main.event_details', event_id=event.id))
 
     if request.method == 'POST':
-        event.title = request.form.get('title')
-        event.description = request.form.get('description')
-        event.date = datetime.strptime(request.form.get('date'), '%Y-%m-%dT%H:%M')
-        event.location = request.form.get('location')
-        event.event_type = request.form.get('event_type')
-        event.tags = request.form.get('tags')
-        event.image_url = request.form.get('image_url')
-
-        db.session.commit()
-        flash('Event updated successfully.')
-        return redirect(url_for('main.event_details', event_id=event.id))
+        if update_event(event, request.form):
+            flash('Event updated successfully.')
+            return redirect(url_for('main.event_details', event_id=event.id))
 
     return render_template('edit_event.html', event=event)
 
@@ -172,13 +122,61 @@ def cancel_event(event_id):
     flash('Event cancelled successfully.')
     return redirect(url_for('main.home'))
 
-@main.route('/manager_dashboard')
-@login_required
-def manager_dashboard():
-    if not current_user.is_event_manager():
-        flash('You do not have permission to access the manager dashboard.')
-        return redirect(url_for('main.home'))
 
-    events = Event.query.filter_by(organizer_id=current_user.id).all()
-    return render_template('manager_dashboard.html', events=events)
+# Helper functions
+
+def update_user_settings(user, form_data):
+    if not check_password_hash(user.password_hash, form_data.get('current_password')):
+        flash('Current password is incorrect.', 'error')
+        return False
+
+    if form_data.get('username') != user.username and User.query.filter_by(username=form_data.get('username')).first():
+        flash('Username already exists.', 'error')
+        return False
+
+    if form_data.get('email') != user.email and User.query.filter_by(email=form_data.get('email')).first():
+        flash('Email already exists.', 'error')
+        return False
+
+    user.username = form_data.get('username')
+    user.email = form_data.get('email')
+    user.first_name = form_data.get('first_name')
+    user.last_name = form_data.get('last_name')
+    user.bio = form_data.get('bio')
+
+    new_password = form_data.get('new_password')
+    if new_password:
+        if new_password != form_data.get('confirm_password'):
+            flash('New passwords do not match.', 'error')
+            return False
+        user.password_hash = generate_password_hash(new_password)
+
+    db.session.commit()
+    return True
+
+def create_new_event(form_data, organizer_id):
+    new_event = Event(
+        title=form_data.get('title'),
+        description=form_data.get('description'),
+        date=datetime.strptime(form_data.get('date'), '%Y-%m-%dT%H:%M'),
+        location=form_data.get('location'),
+        event_type=form_data.get('event_type'),
+        tags=form_data.get('tags'),
+        image_url=form_data.get('image_url'),
+        organizer_id=organizer_id
+    )
+    db.session.add(new_event)
+    db.session.commit()
+    return new_event
+
+def update_event(event, form_data):
+    event.title = form_data.get('title')
+    event.description = form_data.get('description')
+    event.date = datetime.strptime(form_data.get('date'), '%Y-%m-%dT%H:%M')
+    event.location = form_data.get('location')
+    event.event_type = form_data.get('event_type')
+    event.tags = form_data.get('tags')
+    event.image_url = form_data.get('image_url')
+    db.session.commit()
+    return True
 

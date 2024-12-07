@@ -1,46 +1,86 @@
-{% extends "base.html" %} {% block content %}
-<div class="event-details">
-  <h1>{{ event.title }}</h1>
-  <img
-    src="{{ event.image_url }}"
-    alt="{{ event.title }}"
-    class="event-image"
-  />
-  <p>{{ event.description }}</p>
-  <p>Date: {{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
-  <p>Location: {{ event.location }}</p>
-  <p>Type: {{ event.event_type }}</p>
-  <p>Tags: {{ event.tags }}</p>
-  <p>Organizer: {{ event.organizer.username }}</p>
-  <p>Number of Attendees: {{ event.attendee_count }}</p>
+{% extends "base.html" %} {% block title %}{{ event.title }} - Event Planner{%
+endblock %} {% block content %}
+<div class="event-details-container">
+  <div class="event-header">
+    <h1>{{ event.title }}</h1>
+    {% if event.image_url %}
+    <img
+      src="{{ event.image_url }}"
+      alt="{{ event.title }}"
+      class="event-image"
+    />
+    {% endif %}
+  </div>
 
-  {% if current_user.is_authenticated %} {% if is_attending %}
-  <form
-    action="{{ url_for('main.cancel_signup', event_id=event.id) }}"
-    method="post"
-  >
-    <input type="submit" value="Cancel Signup" class="btn btn-danger" />
-  </form>
-  {% else %}
-  <form
-    action="{{ url_for('main.signup_event', event_id=event.id) }}"
-    method="post"
-  >
-    <input type="submit" value="Sign Up" class="btn btn-primary" />
-  </form>
-  {% endif %} {% else %}
-  <p>
-    Please <a href="{{ url_for('auth.login') }}">login</a> to sign up for this
-    event.
-  </p>
+  <div class="event-info">
+    <p><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Location:</strong> {{ event.location }}</p>
+    <p><strong>Event Type:</strong> {{ event.event_type }}</p>
+    {% if event.tags %}
+    <p><strong>Tags:</strong> {{ event.tags }}</p>
+    {% endif %}
+  </div>
+
+  <div class="event-description">
+    <h2>Description</h2>
+    <p>{{ event.description }}</p>
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <div class="event-actions">
+    {% if is_attending %}
+    <form
+      action="{{ url_for('main.cancel_signup', event_id=event.id) }}"
+      method="POST"
+    >
+      <button type="submit" class="btn btn-danger">Cancel Registration</button>
+    </form>
+    {% else %}
+    <form
+      action="{{ url_for('main.signup_event', event_id=event.id) }}"
+      method="POST"
+    >
+      <button type="submit" class="btn btn-primary">Sign Up for Event</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %} {% if can_manage %}
+  <div class="event-management">
+    <h2>Event Management</h2>
+    <div class="management-actions">
+      <a
+        href="{{ url_for('main.edit_event', event_id=event.id) }}"
+        class="btn btn-secondary"
+        >Edit Event</a
+      >
+      <form
+        action="{{ url_for('main.cancel_event', event_id=event.id) }}"
+        method="POST"
+        style="display: inline"
+      >
+        <button
+          type="submit"
+          class="btn btn-danger"
+          onclick="return confirm('Are you sure you want to cancel this event?')"
+        >
+          Cancel Event
+        </button>
+      </form>
+    </div>
+
+    <div class="registered-users">
+      <h2>Registered Users</h2>
+      {% if registered_users %}
+      <ul class="user-list">
+        {% for user in registered_users %}
+        <li>{{ user.username }} ({{ user.email }})</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No users have registered for this event yet.</p>
+      {% endif %}
+    </div>
+  </div>
   {% endif %}
 </div>
-
-{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
-%}
-<div class="flashed-messages">
-  {% for category, message in messages %}
-  <div class="alert alert-{{ category }}">{{ message }}</div>
-  {% endfor %}
-</div>
-{% endif %} {% endwith %} {% endblock %}
+{% endblock %}

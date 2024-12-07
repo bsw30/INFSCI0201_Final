@@ -12,6 +12,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/auth.css') }}"
     />
+    {% block head %}{% endblock %}
   </head>
   <body>
     <div class="page-container">
@@ -21,28 +22,12 @@
             <a href="{{ url_for('main.index') }}">Event Planner</a>
           </div>
           <ul class="navbar-nav">
-            <li>
-              <form
-                action="{{ url_for('main.search') }}"
-                method="get"
-                class="search-form"
-              >
-                <input
-                  type="text"
-                  name="query"
-                  placeholder="Search events..."
-                />
-                <button type="submit">Search</button>
-              </form>
-            </li>
             {% if current_user.is_authenticated %}
             <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
             <li><a href="{{ url_for('main.settings') }}">Settings</a></li>
             {% if current_user.is_event_manager() %}
             <li>
-              <a href="{{ url_for('main.manager_dashboard') }}"
-                >Manager Dashboard</a
-              >
+              <a href="{{ url_for('main.create_event') }}">Create Event</a>
             </li>
             {% endif %}
             <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
@@ -65,7 +50,7 @@
       </main>
 
       <footer>
-        <p>&copy; 2023 Event Planner. All rights reserved.</p>
+        <p>&copy; 2024 Event Planner. All rights reserved.</p>
       </footer>
     </div>
   </body>
