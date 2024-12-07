@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+
+      .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .event-selector {
+        margin-bottom: 3rem;
+      }
+
+      .event-selector h2 {
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+      }
+
+      .select-dropdown {
+        width: 300px;
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .metric-card {
+        background-color: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .metric-value {
+        font-size: 3rem;
+        font-weight: 600;
+        margin: 1rem 0;
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+      }
+
+      .chart-container {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+      }
+
+      .chart-title {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .bar-chart {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 300px;
+        padding: 2rem 0;
+      }
+
+      .bar {
+        width: 50px;
+        background-color: #343a40;
+        margin: 0 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .bar-label {
+        margin-top: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-links">
+        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('main.events') }}">My Events</a>
+        <a href="{{ url_for('main.venues') }}">Venues</a>
+        <a href="{{ url_for('main.participants') }}">Participants</a>
+        <a href="{{ url_for('main.reports') }}">Reports</a>
+      </div>
+      <div class="right-section">
+        <button class="create-event-btn">+ Create Event</button>
+        <div class="notification-icon">
+          🔔<span class="notification-badge">12</span>
+        </div>
+        <div class="profile-icon"></div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="event-selector">
+        <h2>Select event</h2>
+        <select class="select-dropdown">
+          <option>Select...</option>
+        </select>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <h3>Total participants</h3>
+          <div class="metric-value">29</div>
+        </div>
+        <div class="metric-card">
+          <h3>Expected participants</h3>
+          <div class="metric-value">34</div>
+        </div>
+        <div class="metric-card">
+          <h3>Surveys taken</h3>
+          <div class="metric-value">21</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-container">
+          <h3 class="chart-title">Participant satisfaction</h3>
+          <div class="bar-chart">
+            <div class="bar" style="height: 40%">
+              <span class="bar-label">69</span>
+            </div>
+            <div class="bar" style="height: 60%">
+              <span class="bar-label">86</span>
+            </div>
+            <div class="bar" style="height: 50%">
+              <span class="bar-label">78</span>
+            </div>
+            <div class="bar" style="height: 10%">
+              <span class="bar-label">10</span>
+            </div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <h3 class="chart-title">Amenities used</h3>
+          <div class="bar-chart">
+            <div class="bar" style="height: 40%">
+              <span class="bar-label">69</span>
+            </div>
+            <div class="bar" style="height: 60%">
+              <span class="bar-label">86</span>
+            </div>
+            <div class="bar" style="height: 50%">
+              <span class="bar-label">78</span>
+            </div>
+            <div class="bar" style="height: 10%">
+              <span class="bar-label">10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

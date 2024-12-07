@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Participants</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background-color: white;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: #495057;
+        font-weight: 500;
+      }
+
+      .nav-links a.active {
+        text-decoration: underline;
+        color: #000;
+      }
+
+      .search-section {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .search-controls {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .search-bar {
+        max-width: 400px;
+        position: relative;
+      }
+
+      .search-bar input {
+        width: 100%;
+        padding: 0.5rem 2.5rem 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      .import-contacts {
+        padding: 0.5rem 1rem;
+        border: 1px solid #000;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+      }
+
+      .participants-grid {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+
+      .participant-card {
+        display: flex;
+        gap: 1rem;
+        align-items: start;
+        padding: 1rem;
+      }
+
+      .participant-avatar {
+        width: 60px;
+        height: 60px;
+        background: #dee2e6;
+        border-radius: 50%;
+      }
+
+      .participant-details {
+        flex: 1;
+      }
+
+      .participant-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .participant-contact {
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+      }
+
+      .rsvp-status {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.875rem;
+      }
+
+      .accepted {
+        background: #212529;
+      }
+
+      .pending {
+        background: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-links">
+        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('main.events') }}">My Events</a>
+        <a href="{{ url_for('main.venues') }}">Venues</a>
+        <a href="{{ url_for('main.participants') }}">Participants</a>
+        <a href="{{ url_for('main.reports') }}">Reports</a>
+      </div>
+      <div class="right-section">
+        <button class="create-event-btn">+ Create Event</button>
+        <div class="notification-icon">
+          🔔<span class="notification-badge">12</span>
+        </div>
+        <div class="profile-icon"></div>
+      </div>
+    </nav>
+
+    <div class="search-section">
+      <div class="search-controls">
+        <div class="search-bar">
+          <input type="text" placeholder="Search" />
+          <span class="search-icon">🔍</span>
+        </div>
+        <button class="filter-button">
+          Filter
+          <span>▼</span>
+        </button>
+      </div>
+      <button class="import-contacts">Import Contacts</button>
+    </div>
+
+    <div class="participants-grid">
+      <div class="participant-card">
+        <div class="participant-avatar"></div>
+        <div class="participant-details">
+          <h3 class="participant-name">John Smith</h3>
+          <p class="participant-contact">000-000-000</p>
+          <p class="participant-contact">smith@email.com</p>
+          <div class="rsvp-status accepted">Accepted RSVP for Club Meeting</div>
+        </div>
+      </div>
+      <div class="participant-card">
+        <div class="participant-avatar"></div>
+        <div class="participant-details">
+          <h3 class="participant-name">John Smith</h3>
+          <p class="participant-contact">000-000-000</p>
+          <p class="participant-contact">smith@email.com</p>
+          <div class="rsvp-status pending">Pending RSVP for Club Meeting</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
