@@ -1,27 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <title>User Profile</title>
-  </head>
-  <body>
-    <h2>User Profile</h2>
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %} {% for category, message in messages %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
-    {% endfor %} {% endif %} {% endwith %}
-    <p>Username: {{ user.username }}</p>
-    <p>Email: {{ user.email }}</p>
-    <a href="{{ url_for('profile.update_profile') }}">Update Profile</a>
-    <a href="{{ url_for('auth.logout') }}">Logout</a>
-  </body>
-</html>
+{% extends "base.html" %} {% block title %}{{ current_user.username }}'s
+Profile{% endblock %} {% block content %}
+<div class="container">
+  <h1>{{ current_user.username }}'s Profile</h1>
+
+  <section class="user-info">
+    <h2>User Information</h2>
+    <p>
+      <strong>Name:</strong> {{ current_user.first_name }} {{
+      current_user.last_name }}
+    </p>
+    <p><strong>Email:</strong> {{ current_user.email }}</p>
+    <p><strong>Bio:</strong> {{ current_user.bio or 'No bio provided' }}</p>
+  </section>
+
+  <section class="upcoming-events">
+    <h2>Upcoming Events</h2>
+    <div class="event-grid">
+      {% for event in upcoming_events %}
+      <div class="event-card">
+        <img
+          src="{{ event.image_url }}"
+          alt="{{ event.title }}"
+          class="event-image"
+        />
+        <div class="event-details">
+          <h3 class="event-title">{{ event.title }}</h3>
+          <p class="event-info">{{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
+          <p class="event-info">{{ event.location }}</p>
+          <p class="event-info">{{ event.event_type }}</p>
+          <a
+            href="{{ url_for('main.event_details', event_id=event.id) }}"
+            class="event-link"
+            >View Details</a
+          >
+        </div>
+      </div>
+      {% else %}
+      <p>You haven't signed up for any upcoming events.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="past-events">
+    <h2>Past Events</h2>
+    <div class="event-grid">
+      {% for event in past_events %}
+      <div class="event-card">
+        <img
+          src="{{ event.image_url }}"
+          alt="{{ event.title }}"
+          class="event-image"
+        />
+        <div class="event-details">
+          <h3 class="event-title">{{ event.title }}</h3>
+          <p class="event-info">{{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
+          <p class="event-info">{{ event.location }}</p>
+          <p class="event-info">{{ event.event_type }}</p>
+          <a
+            href="{{ url_for('main.event_details', event_id=event.id) }}"
+            class="event-link"
+            >View Details</a
+          >
+        </div>
+      </div>
+      {% else %}
+      <p>You haven't attended any past events.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

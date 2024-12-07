@@ -1,0 +1,46 @@
+{% extends "base.html" %} {% block content %}
+<div class="event-details">
+  <h1>{{ event.title }}</h1>
+  <img
+    src="{{ event.image_url }}"
+    alt="{{ event.title }}"
+    class="event-image"
+  />
+  <p>{{ event.description }}</p>
+  <p>Date: {{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
+  <p>Location: {{ event.location }}</p>
+  <p>Type: {{ event.event_type }}</p>
+  <p>Tags: {{ event.tags }}</p>
+  <p>Organizer: {{ event.organizer.username }}</p>
+  <p>Number of Attendees: {{ event.attendee_count }}</p>
+
+  {% if current_user.is_authenticated %} {% if is_attending %}
+  <form
+    action="{{ url_for('main.cancel_signup', event_id=event.id) }}"
+    method="post"
+  >
+    <input type="submit" value="Cancel Signup" class="btn btn-danger" />
+  </form>
+  {% else %}
+  <form
+    action="{{ url_for('main.signup_event', event_id=event.id) }}"
+    method="post"
+  >
+    <input type="submit" value="Sign Up" class="btn btn-primary" />
+  </form>
+  {% endif %} {% else %}
+  <p>
+    Please <a href="{{ url_for('auth.login') }}">login</a> to sign up for this
+    event.
+  </p>
+  {% endif %}
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%}
+<div class="flashed-messages">
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %} {% endwith %} {% endblock %}

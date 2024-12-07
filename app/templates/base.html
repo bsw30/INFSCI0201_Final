@@ -5,42 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Event Planner{% endblock %}</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
-    <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
-    {% block extra_css %}{% endblock %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/auth.css') }}"
+    />
   </head>
   <body>
-    <header>
-      <nav>
-        <ul>
-          <li><a href="{{ url_for('home') }}">Home</a></li>
-          {% if current_user.is_authenticated %}
-          <li><a href="{{ url_for('auth.profile') }}">Profile</a></li>
-          <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-          {% else %}
-          <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-          <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
-          {% endif %}
-        </ul>
-      </nav>
-    </header>
+    <div class="page-container">
+      <header>
+        <nav class="navbar">
+          <div class="navbar-brand">
+            <a href="{{ url_for('main.index') }}">Event Planner</a>
+          </div>
+          <ul class="navbar-nav">
+            <li>
+              <form
+                action="{{ url_for('main.search') }}"
+                method="get"
+                class="search-form"
+              >
+                <input
+                  type="text"
+                  name="query"
+                  placeholder="Search events..."
+                />
+                <button type="submit">Search</button>
+              </form>
+            </li>
+            {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('main.settings') }}">Settings</a></li>
+            {% if current_user.is_event_manager() %}
+            <li>
+              <a href="{{ url_for('main.manager_dashboard') }}"
+                >Manager Dashboard</a
+              >
+            </li>
+            {% endif %}
+            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+            <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </header>
 
-    <main>
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %} {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
-    </main>
+      <main class="content">
+        {% with messages = get_flashed_messages() %} {% if messages %}
+        <div class="flashes">
+          {% for message in messages %}
+          <div class="flash">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %} {% endwith %} {% block content %}{% endblock %}
+      </main>
 
-    <footer>
-      <p>&copy; 2023 Event Planner. All rights reserved.</p>
-    </footer>
-
-    {% block extra_js %}{% endblock %}
+      <footer>
+        <p>&copy; 2023 Event Planner. All rights reserved.</p>
+      </footer>
+    </div>
   </body>
 </html>

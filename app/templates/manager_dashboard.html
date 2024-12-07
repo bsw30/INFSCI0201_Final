@@ -1,0 +1,35 @@
+{% extends "base.html" %} {% block title %}Manager Dashboard - Event Planner{%
+endblock %} {% block content %}
+<div class="container">
+  <h1>Manager Dashboard</h1>
+  <a href="{{ url_for('main.create_event') }}" class="btn btn-primary"
+    >Create New Event</a
+  >
+  <h2>Your Events</h2>
+  <div class="event-list">
+    {% for event in events %}
+    <div class="event-item">
+      <h3>{{ event.title }}</h3>
+      <p>Date: {{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p>Location: {{ event.location }}</p>
+      <a href="{{ url_for('main.event_details', event_id=event.id) }}"
+        >View Details</a
+      >
+      <a href="{{ url_for('main.edit_event', event_id=event.id) }}">Edit</a>
+      <form
+        action="{{ url_for('main.cancel_event', event_id=event.id) }}"
+        method="POST"
+        style="display: inline"
+      >
+        <button
+          type="submit"
+          onclick="return confirm('Are you sure you want to cancel this event?')"
+        >
+          Cancel Event
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

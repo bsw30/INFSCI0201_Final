@@ -1,44 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <title>Sign Up</title>
-  </head>
-  <body>
-    <div class="container">
-      <h2>Sign Up</h2>
-      {% with messages = get_flashed_messages() %} {% if messages %}
-      <div class="notification">{{ messages[0] }}</div>
-      {% endif %} {% endwith %}
-      <form method="POST" action="{{ url_for('auth.signup') }}">
-        <div class="form-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" name="username" required />
-        </div>
-        <div class="form-group">
-          <label for="email">Email:</label>
-          <input type="email" id="email" name="email" required />
-        </div>
-        <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" name="password" required />
-        </div>
-        <div>
-          <input type="submit" value="Sign Up" />
-        </div>
-      </form>
-      <p>
-        Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
-      </p>
+{% extends "base.html" %} {% block title %}Sign Up - Event Planner{% endblock %}
+{% block content %}
+<div class="auth-container">
+  <h1>Sign Up</h1>
+  <form method="POST" action="{{ url_for('auth.signup') }}" class="auth-form">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required />
     </div>
-  </body>
-</html>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required />
+    </div>
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select id="role" name="role" required>
+        <option value="user">Regular User</option>
+        <option value="event_manager">Event Manager</option>
+      </select>
+    </div>
+    <div class="form-group" id="organizer-group" style="display: none">
+      <label for="organizer_id">Organizer</label>
+      <select id="organizer_id" name="organizer_id">
+        <option value="">Select an organizer</option>
+        {% for organizer in organizers %}
+        <option value="{{ organizer.id }}">{{ organizer.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit">Sign Up</button>
+  </form>
+  <div class="auth-links">
+    <p>
+      Already have an account?
+      <a href="{{ url_for('auth.login') }}">Login here</a>
+    </p>
+  </div>
+</div>
+<script>
+  document.getElementById("role").addEventListener("change", function () {
+    var organizerGroup = document.getElementById("organizer-group");
+    if (this.value === "event_manager") {
+      organizerGroup.style.display = "block";
+    } else {
+      organizerGroup.style.display = "none";
+    }
+  });
+</script>
+{% endblock %}

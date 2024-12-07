@@ -1,0 +1,27 @@
+{% extends "base.html" %} {% block title %}Search Results{% endblock %} {% block
+content %}
+<div class="container">
+  <h1>Search Results for "{{ query }}"</h1>
+
+  {% if events %}
+  <section class="events">
+    {% for event in events %}
+    <div class="event-card">
+      <h3>{{ event.title }}</h3>
+      <p>Date: {{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p>Location: {{ event.location }}</p>
+      <p>Type: {{ event.event_type }}</p>
+      <p>Tags: {{ event.tags }}</p>
+      <a
+        href="{{ url_for('main.event_details', event_id=event.id) }}"
+        class="button"
+        >View Details</a
+      >
+    </div>
+    {% endfor %}
+  </section>
+  {% else %}
+  <p>No events found matching your search.</p>
+  {% endif %}
+</div>
+{% endblock %}
