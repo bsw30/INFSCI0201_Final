@@ -1,12 +1,15 @@
 from flask import Blueprint, request, jsonify, session, redirect, url_for
-from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
 
 user_bp = Blueprint('user', __name__)
 
-# User Roles
+# Role definitions (stored separately, not in the model)
 USER_ROLE = "user"
 MANAGER_ROLE = "manager"
+
+# Temporary dictionary to store roles (or use a database table if available)
+user_roles = {}  # Example: {user_id: "manager"}
+
 
 # User Registration
 @user_bp.route('/register', methods=['POST'])
@@ -20,12 +23,16 @@ def register():
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email already registered'}), 400
 
-    hashed_password = generate_password_hash(password)
-    new_user = User(username=username, email=email, password=hashed_password, role=role)
+    new_user = User(username=username, email=email)
+    new_user.set_password(password)  # Use User's set_password method
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    # Assign role after user creation
+    user_roles[new_user.id] = role
+
+    return jsonify({'message': 'User registered successfully', 'role': role}), 201
+
 
 # User Login
 @user_bp.route('/login', methods=['POST'])
@@ -35,12 +42,14 @@ def login():
     password = data.get('password')
 
     user = User.query.filter_by(email=email).first()
-    if not user or not check_password_hash(user.password, password):
+    if not user or not user.check_password(password):  # Use User's check_password method
         return jsonify({'error': 'Invalid email or password'}), 401
 
     session['user_id'] = user.id
-    session['user_role'] = user.role
-    return jsonify({'message': 'Login successful', 'role': user.role}), 200
+    session['user_role'] = user_roles.get(user.id, USER_ROLE)  # Default to "user" if no role
+
+    return jsonify({'message': 'Login successful', 'role': session["user_role"]}), 200
+
 
 # User Logout
 @user_bp.route('/logout', methods=['POST'])
@@ -48,6 +57,7 @@ def logout():
     session.pop('user_id', None)
     session.pop('user_role', None)
     return jsonify({'message': 'Logout successful'}), 200
+
 
 # Get Current User Info
 @user_bp.route('/me', methods=['GET'])
@@ -57,11 +67,14 @@ def get_current_user():
         return jsonify({'error': 'Unauthorized'}), 401
 
     user = User.query.get(user_id)
+    role = session.get('user_role', USER_ROLE)
+
     return jsonify({
         'username': user.username,
         'email': user.email,
-        'role': user.role
+        'role': role
     }), 200
+
 
 # Check User Role
 def is_manager():
