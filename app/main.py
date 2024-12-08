@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from icalendar import Calendar, Event as CalendarEvent
 from urllib.parse import urlencode
+from sqlalchemy import or_
 
 main = Blueprint('main', __name__)
 
@@ -24,8 +25,9 @@ def index():
 @login_required
 def home():
     # Get all events, ordered by date
-    events = Event.query.order_by(Event.date).all()
+    events = filter_events(Event.query).order_by(Event.date).all()
     return render_template('home.html', events=events, is_event_manager=current_user.is_event_manager())
+
 
 
 
@@ -37,6 +39,29 @@ def search():
                                 Event.event_type.ilike(f'%{query}%') |
                                 Event.tags.ilike(f'%{query}%')).all() if query else []
     return render_template('search_results.html', events=events, query=query)
+
+@main.route('/events')
+@login_required
+def events():
+    events = filter_events(Event.query).order_by(Event.date).all()
+    return render_template('events.html', events=events)
+
+def filter_events(query):
+    event_type = request.args.get('event_type')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    location = request.args.get('location')
+
+    if event_type:
+        query = query.filter(Event.event_type == event_type)
+    if start_date:
+        query = query.filter(Event.date >= datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        query = query.filter(Event.date <= datetime.strptime(end_date, '%Y-%m-%d'))
+    if location:
+        query = query.filter(Event.location.ilike(f'%{location}%'))
+
+    return query
 
 @main.route('/event/<int:event_id>')
 def event_details(event_id):
@@ -113,6 +138,22 @@ def create_event():
             return redirect(url_for('main.event_details', event_id=new_event.id))
 
     return render_template('create_event.html')
+
+def create_new_event(form_data, organizer_id):
+    tags = ','.join(form_data.getlist('tags'))  # Join multiple tags into a comma-separated string
+    new_event = Event(
+        title=form_data.get('title'),
+        description=form_data.get('description'),
+        date=datetime.strptime(form_data.get('date'), '%Y-%m-%dT%H:%M'),
+        location=form_data.get('location'),
+        event_type=form_data.get('event_type'),
+        tags=tags,
+        image_url=form_data.get('image_url'),
+        organizer_id=organizer_id
+    )
+    db.session.add(new_event)
+    db.session.commit()
+    return new_event
 
 @main.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required

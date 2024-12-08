@@ -1,6 +1,11 @@
 {% extends "base.html" %} {% block title %}Edit Event - Event Planner{% endblock
-%} {% block content %}
-<div class="container">
+%} {% block head %} {{ super() }}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/event_pages.css') }}"
+/>
+{% endblock %} {% block content %}
+<div class="edit-event-container">
   <h1>Edit Event</h1>
   <form
     method="POST"
