@@ -29,18 +29,12 @@ def create_app():
     
     # Register blueprints
     from .auth import auth as auth_blueprint
-    
     app.register_blueprint(auth_blueprint)
     
     from .main import main as main_blueprint  # Add this line
 
     app.register_blueprint(main_blueprint)    # Add this line
 
-    #Report A Problem
-    from routes.report_routes import report_routes
-
-    app.register_blueprint(report_routes)
-    
     # Create database tables
     with app.app_context():
         db.create_all()
