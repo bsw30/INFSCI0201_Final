@@ -1,8 +1,8 @@
-"""organizations
+"""please
 
-Revision ID: 33b63aed0ae2
+Revision ID: add8e4860d21
 Revises: 
-Create Date: 2024-12-07 15:12:45.285097
+Create Date: 2024-12-08 15:23:55.613775
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '33b63aed0ae2'
+revision = 'add8e4860d21'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -49,8 +49,11 @@ def upgrade():
     sa.Column('tags', sa.String(length=200), nullable=True),
     sa.Column('organizer_id', sa.Integer(), nullable=False),
     sa.Column('image_url', sa.String(length=200), nullable=True),
+    sa.Column('eventbrite_id', sa.String(length=50), nullable=True),
+    sa.Column('last_updated', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['organizer_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('eventbrite_id')
     )
     op.create_table('event_attendees',
     sa.Column('user_id', sa.Integer(), nullable=False),

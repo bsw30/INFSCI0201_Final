@@ -47,6 +47,9 @@ class Event(db.Model):
     tags = db.Column(db.String(200))
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     image_url = db.Column(db.String(200))
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+    is_new = False
 
     @property
     def attendee_count(self):

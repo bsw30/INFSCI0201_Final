@@ -1,9 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, Response
 from flask_login import login_required, current_user
-from .models import Event, User
+from .models import Event, User, Organizer
 from . import db
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+# from eventbrite import Eventbrite
+# from .eventbrite_sync import EventbriteSync
+import os
+from icalendar import Calendar, Event as CalendarEvent
+from urllib.parse import urlencode
 
 main = Blueprint('main', __name__)
 
@@ -11,14 +16,18 @@ main = Blueprint('main', __name__)
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    events = Event.query.order_by(Event.date).limit(3).all()
+    # Get the 3 most recent events for the landing page
+    events = Event.query.order_by(Event.date.desc()).limit(3).all()
     return render_template('index.html', events=events)
 
 @main.route('/home')
 @login_required
 def home():
+    # Get all events, ordered by date
     events = Event.query.order_by(Event.date).all()
     return render_template('home.html', events=events, is_event_manager=current_user.is_event_manager())
+
+
 
 @main.route('/search')
 def search():
@@ -32,11 +41,22 @@ def search():
 @main.route('/event/<int:event_id>')
 def event_details(event_id):
     event = Event.query.get_or_404(event_id)
-    is_attending = current_user.is_authenticated and event.is_user_attending(current_user)
-    can_manage = current_user.is_authenticated and current_user.is_event_manager() and current_user.id == event.organizer_id
-    registered_users = event.attendees.all() if can_manage else []
-    return render_template('event_details.html', event=event, current_time=datetime.now(), 
-                           is_attending=is_attending, can_manage=can_manage, registered_users=registered_users)
+    is_attending = False
+    can_manage = False
+    registered_users = []
+    
+    if current_user.is_authenticated:
+        is_attending = event.is_user_attending(current_user)
+        can_manage = current_user.is_event_manager() and current_user.id == event.organizer_id
+        if can_manage:
+            registered_users = event.attendees.all()
+            
+    return render_template('event_details.html', 
+                         event=event,
+                         current_time=datetime.now(),
+                         is_attending=is_attending,
+                         can_manage=can_manage,
+                         registered_users=registered_users)
 
 @main.route('/event/<int:event_id>/signup', methods=['POST'])
 @login_required
@@ -122,6 +142,57 @@ def cancel_event(event_id):
     flash('Event cancelled successfully.')
     return redirect(url_for('main.home'))
 
+# @main.route('/sync_eventbrite')
+# @login_required
+# def sync_eventbrite():
+#     if not current_user.is_event_manager():
+#         flash('You do not have permission to sync Eventbrite events.')
+#         return redirect(url_for('main.home'))
+
+#     try:
+#         sync = EventbriteSync()
+#         stats = sync.sync_events(current_user.organizer.id) 
+        
+#         if stats['new'] > 0:
+#             flash(f'Successfully imported {stats["new"]} events from Eventbrite.')
+#         else:
+#             flash('No new events found on Eventbrite.')
+            
+#     except Exception as e:
+#         print(f"Eventbrite sync error: {str(e)}")
+#         flash(f'Error syncing Eventbrite events: {str(e)}', 'error')
+
+#     return redirect(url_for('main.home'))
+
+@main.route('/event/<int:event_id>/download.ics')
+def download_ics(event_id):
+    event = Event.query.get_or_404(event_id)
+    cal = Calendar()
+    cal_event = CalendarEvent()
+    cal_event.add('summary', event.title)
+    cal_event.add('description', event.description)
+    cal_event.add('dtstart', event.date)
+    cal_event.add('dtend', event.date + timedelta(hours=1))  # Assume 1-hour duration
+    cal_event.add('location', event.location)
+    cal.add_component(cal_event)
+
+    response = Response(cal.to_ical(), mimetype='text/calendar')
+    response.headers['Content-Disposition'] = f'attachment; filename={event.title.replace(" ", "_")}.ics'
+    return response
+
+@main.route('/event/<int:event_id>/add-to-google-calendar')
+def add_to_google_calendar(event_id):
+    event = Event.query.get_or_404(event_id)
+    google_calendar_url = "https://www.google.com/calendar/render"
+    params = {
+        "action": "TEMPLATE",
+        "text": event.title,
+        "dates": f"{event.date.strftime('%Y%m%dT%H%M%S')}/{(event.date + timedelta(hours=1)).strftime('%Y%m%dT%H%M%S')}",
+        "details": event.description,
+        "location": event.location,
+    }
+    return redirect(f"{google_calendar_url}?{urlencode(params)}")
+
 
 # Helper functions
 
@@ -179,4 +250,7 @@ def update_event(event, form_data):
     event.image_url = form_data.get('image_url')
     db.session.commit()
     return True
+
+
+
 

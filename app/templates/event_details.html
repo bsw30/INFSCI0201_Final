@@ -26,6 +26,21 @@ endblock %} {% block content %}
     <p>{{ event.description }}</p>
   </div>
 
+  <div class="event-calendar-links">
+    <h3>Add to Calendar</h3>
+    <!-- <a
+      href="{{ url_for('main.download_ics', event_id=event.id) }}"
+      class="btn btn-secondary"
+      >Download iCal</a
+    > -->
+    <a
+      href="{{ url_for('main.add_to_google_calendar', event_id=event.id) }}"
+      class="btn btn-secondary"
+      target="_blank"
+      >Add to Google Calendar</a
+    >
+  </div>
+
   {% if current_user.is_authenticated %}
   <div class="event-actions">
     {% if is_attending %}

@@ -14,11 +14,17 @@
         name="title"
         value="{{ event.title }}"
         required
+        class="form-control"
       />
     </div>
     <div class="form-group">
       <label for="description">Description</label>
-      <textarea id="description" name="description" required>
+      <textarea
+        id="description"
+        name="description"
+        required
+        class="form-control"
+      >
 {{ event.description }}</textarea
       >
     </div>
@@ -30,6 +36,7 @@
         name="date"
         value="{{ event.date.strftime('%Y-%m-%dT%H:%M') }}"
         required
+        class="form-control"
       />
     </div>
     <div class="form-group">
@@ -40,6 +47,7 @@
         name="location"
         value="{{ event.location }}"
         required
+        class="form-control"
       />
     </div>
     <div class="form-group">
@@ -50,11 +58,18 @@
         name="event_type"
         value="{{ event.event_type }}"
         required
+        class="form-control"
       />
     </div>
     <div class="form-group">
       <label for="tags">Tags</label>
-      <input type="text" id="tags" name="tags" value="{{ event.tags }}" />
+      <input
+        type="text"
+        id="tags"
+        name="tags"
+        value="{{ event.tags }}"
+        class="form-control"
+      />
     </div>
     <div class="form-group">
       <label for="image_url">Image URL</label>
@@ -63,6 +78,7 @@
         id="image_url"
         name="image_url"
         value="{{ event.image_url }}"
+        class="form-control"
       />
     </div>
     <button type="submit" class="btn btn-primary">Update Event</button>
