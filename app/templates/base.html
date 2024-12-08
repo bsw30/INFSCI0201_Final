@@ -39,7 +39,9 @@
 
     <footer>
       <p>&copy; 2023 Event Planner. All rights reserved.</p>
-      {% include 'report_problem_modal.html' %}
+      {% include 'report_problem_modal.html' %} 
+      <button id="reportProblemButton" onclick="openReportForm()">Report a Problem</button>
+
     </footer>
 
     {% block extra_js %}{% endblock %}
