@@ -161,21 +161,3 @@ a:hover {
     font-size: 1.5rem;
   }
 }
-
-#reportProblemModal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    width: 50%;
-}
-
-.modal-content button {
-    margin: 10px;
-    padding: 10px 20px;
-}
-
