@@ -19,10 +19,5 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-class ProblemReport(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    description = db.Column(db.String(500), nullable=False)
-    email = db.Column(db.String(120), nullable=True)
-
 db.create_all()
 
