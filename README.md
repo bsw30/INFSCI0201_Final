@@ -83,6 +83,6 @@ This project is licensed under the MIT License. See `LICENSE` for more details.
 
 ## Contact
 For questions or support, contact the maintainers:
-- **Melinda Go**: mtg62@example.com
-- **Brianna Williams**: bsw30@example.com
-- **Abby Zimmerman**: asz18@example.com
+- **Melinda Go**
+- **Brianna Williams**
+- **Abby Zimmerman**
