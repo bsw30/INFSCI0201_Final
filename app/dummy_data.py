@@ -1,4 +1,4 @@
-from .models import User, Event, Organizer
+from .models import User, Event, Organizer, Tag
 from . import db
 from datetime import datetime
 from sqlalchemy.exc import OperationalError
@@ -45,7 +45,6 @@ def create_dummy_data():
                     date=datetime(2024, 6, 15, 9, 0),
                     location="San Francisco Convention Center",
                     event_type="Conference",
-                    tags="tech,innovation,networking",
                     organizer_id=1,
                     image_url="https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 ),
@@ -55,7 +54,6 @@ def create_dummy_data():
                     date=datetime(2024, 3, 10, 12, 0),
                     location="Downtown Business Center",
                     event_type="Networking",
-                    tags="business,networking,lunch",
                     organizer_id=2,
                     image_url="https://example.com/business-lunch.jpg"
                 )
@@ -63,7 +61,30 @@ def create_dummy_data():
             for event in dummy_events:
                 db.session.add(event)
             db.session.commit()
-            print('Dummy events created.')
+
+            # Add tags to events
+            tech_conf = Event.query.filter_by(title="Tech Conference 2024").first()
+            business_lunch = Event.query.filter_by(title="Business Networking Lunch").first()
+
+            tech_tags = ["tech", "innovation", "networking"]
+            business_tags = ["business", "networking", "lunch"]
+
+            for tag_name in tech_tags:
+                tag = Tag.query.filter_by(name=tag_name).first()
+                if not tag:
+                    tag = Tag(name=tag_name)
+                    db.session.add(tag)
+                tech_conf.tags.append(tag)
+
+            for tag_name in business_tags:
+                tag = Tag.query.filter_by(name=tag_name).first()
+                if not tag:
+                    tag = Tag(name=tag_name)
+                    db.session.add(tag)
+                business_lunch.tags.append(tag)
+
+            db.session.commit()
+            print('Dummy events created with tags.')
 
     except OperationalError:
         print('Database tables not created yet. Run flask db upgrade first.')

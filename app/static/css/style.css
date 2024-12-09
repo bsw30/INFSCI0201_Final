@@ -309,3 +309,12 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+.tag {
+  display: inline-block;
+  background-color: #f1f1f1;
+  border-radius: 3px;
+  padding: 2px 8px;
+  margin-right: 5px;
+  font-size: 0.9em;
+}

@@ -96,16 +96,18 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
 
+event_tags = db.Table('event_tags',
+    db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True),
+    extend_existing=True
+)
+
 event_attendees = db.Table('event_attendees',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
     db.Column('signup_date', db.DateTime, default=datetime.utcnow)
 )
 
-event_tags = db.Table('event_tags',
-    db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
-)
 
 user_tag_subscriptions = db.Table('user_tag_subscriptions',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),

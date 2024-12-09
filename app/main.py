@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, Response
 from flask_login import login_required, current_user
-from .models import Event, User, Organizer
+from .models import Event, User, Organizer, Tag
 from . import db
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -34,23 +34,32 @@ def home():
 @main.route('/search')
 def search():
     query = request.args.get('query')
-    events = Event.query.filter(Event.title.ilike(f'%{query}%') | 
-                                Event.description.ilike(f'%{query}%') |
-                                Event.event_type.ilike(f'%{query}%') |
-                                Event.tags.ilike(f'%{query}%')).all() if query else []
+    events = []
+    if query:
+        events = Event.query.filter(
+            or_(
+                Event.title.ilike(f'%{query}%'),
+                Event.description.ilike(f'%{query}%'),
+                Event.event_type.ilike(f'%{query}%'),
+                Event.location.ilike(f'%{query}%'),
+                Event.tags.any(Tag.name.ilike(f'%{query}%')) 
+            )
+        ).all()
     return render_template('search_results.html', events=events, query=query)
 
 @main.route('/events')
 @login_required
 def events():
     events = filter_events(Event.query).order_by(Event.date).all()
-    return render_template('events.html', events=events)
+    tags = Tag.query.all()
+    return render_template('events.html', events=events, tags=tags)
 
 def filter_events(query):
     event_type = request.args.get('event_type')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     location = request.args.get('location')
+    tags = request.args.getlist('tags')  # New: get multiple tags
 
     if event_type:
         query = query.filter(Event.event_type == event_type)
@@ -60,6 +69,8 @@ def filter_events(query):
         query = query.filter(Event.date <= datetime.strptime(end_date, '%Y-%m-%d'))
     if location:
         query = query.filter(Event.location.ilike(f'%{location}%'))
+    if tags:  
+        query = query.filter(Event.tags.any(Tag.name.in_(tags)))
 
     return query
 
@@ -87,21 +98,43 @@ def event_details(event_id):
 @login_required
 def signup_event(event_id):
     event = Event.query.get_or_404(event_id)
-    if event.add_attendee(current_user):
+    if event.date < datetime.now():
+        flash('This event has already passed. Signups are not allowed.', 'error')
+    elif event.add_attendee(current_user):
         flash('You have successfully signed up for this event.', 'success')
     else:
-        flash('You are already signed up for this event or the event has already started.', 'error')
+        flash('You are already signed up for this event.', 'error')
     return redirect(url_for('main.event_details', event_id=event.id))
 
 @main.route('/event/<int:event_id>/cancel', methods=['POST'])
 @login_required
 def cancel_signup(event_id):
     event = Event.query.get_or_404(event_id)
-    if event.remove_attendee(current_user):
+    if event.date < datetime.now():
+        flash('This event has already passed. Cancellations are not allowed.', 'error')
+    elif event.remove_attendee(current_user):
         flash('You have successfully cancelled your signup for this event.', 'success')
     else:
-        flash('You are not signed up for this event or the event has already started.', 'error')
+        flash('You are not signed up for this event.', 'error')
     return redirect(url_for('main.event_details', event_id=event.id))
+
+@main.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    if event.date < datetime.now():
+        flash('This event has already passed. Editing is not allowed.', 'error')
+        return redirect(url_for('main.event_details', event_id=event.id))
+    if not current_user.is_event_manager() or event.organizer_id != current_user.id:
+        flash('You do not have permission to edit this event.')
+        return redirect(url_for('main.event_details', event_id=event.id))
+
+    if request.method == 'POST':
+        if update_event(event, request.form):
+            flash('Event updated successfully.')
+            return redirect(url_for('main.event_details', event_id=event.id))
+
+    return render_template('edit_event.html', event=event)
 
 @main.route('/profile')
 @login_required
@@ -140,7 +173,16 @@ def create_event():
     return render_template('create_event.html')
 
 def create_new_event(form_data, organizer_id):
-    tags = ','.join(form_data.getlist('tags'))  # Join multiple tags into a comma-separated string
+    # Process tags
+    tag_names = [tag.strip() for tag in form_data.get('tags', '').split(',') if tag.strip()]
+    tags = []
+    for tag_name in tag_names:
+        tag = Tag.query.filter_by(name=tag_name).first()
+        if not tag:
+            tag = Tag(name=tag_name)
+            db.session.add(tag)
+        tags.append(tag)
+
     new_event = Event(
         title=form_data.get('title'),
         description=form_data.get('description'),
@@ -154,21 +196,6 @@ def create_new_event(form_data, organizer_id):
     db.session.add(new_event)
     db.session.commit()
     return new_event
-
-@main.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def edit_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    if not current_user.is_event_manager() or event.organizer_id != current_user.id:
-        flash('You do not have permission to edit this event.')
-        return redirect(url_for('main.event_details', event_id=event.id))
-
-    if request.method == 'POST':
-        if update_event(event, request.form):
-            flash('Event updated successfully.')
-            return redirect(url_for('main.event_details', event_id=event.id))
-
-    return render_template('edit_event.html', event=event)
 
 @main.route('/cancel_event/<int:event_id>', methods=['POST'])
 @login_required
@@ -267,13 +294,22 @@ def update_user_settings(user, form_data):
     return True
 
 def create_new_event(form_data, organizer_id):
+    # Parse tags
+    tag_names = form_data.getlist('tags')  # This will return a list of selected tag names
+    tags = []
+    for tag_name in tag_names:
+        tag = Tag.query.filter_by(name=tag_name).first()
+        if not tag:
+            tag = Tag(name=tag_name)
+        tags.append(tag)
+
     new_event = Event(
         title=form_data.get('title'),
         description=form_data.get('description'),
         date=datetime.strptime(form_data.get('date'), '%Y-%m-%dT%H:%M'),
         location=form_data.get('location'),
         event_type=form_data.get('event_type'),
-        tags=form_data.get('tags'),
+        tags=tags,  # Now we're passing a list of Tag objects
         image_url=form_data.get('image_url'),
         organizer_id=organizer_id
     )
