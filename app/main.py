@@ -17,18 +17,17 @@ main = Blueprint('main', __name__)
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    # Get the 3 most recent events for the landing page
+    available_tags = Tag.query.all()
     events = Event.query.order_by(Event.date.desc()).limit(3).all()
-    return render_template('index.html', events=events)
+    return render_template('index.html', events=events, available_tags=available_tags)
+
 
 @main.route('/home')
 @login_required
 def home():
-    # Get all events, ordered by date
+    available_tags = Tag.query.all()
     events = filter_events(Event.query).order_by(Event.date).all()
-    return render_template('home.html', events=events, is_event_manager=current_user.is_event_manager())
-
-
+    return render_template('home.html', events=events, available_tags=available_tags, is_event_manager=current_user.is_event_manager())
 
 
 @main.route('/search')
@@ -59,7 +58,7 @@ def filter_events(query):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     location = request.args.get('location')
-    tags = request.args.getlist('tags')  # New: get multiple tags
+    tag = request.args.get('tag')  
 
     if event_type:
         query = query.filter(Event.event_type == event_type)
@@ -69,10 +68,11 @@ def filter_events(query):
         query = query.filter(Event.date <= datetime.strptime(end_date, '%Y-%m-%d'))
     if location:
         query = query.filter(Event.location.ilike(f'%{location}%'))
-    if tags:  
-        query = query.filter(Event.tags.any(Tag.name.in_(tags)))
+    if tag: 
+        query = query.filter(Event.tags.any(Tag.name == tag))
 
     return query
+
 
 @main.route('/event/<int:event_id>')
 def event_details(event_id):
@@ -86,13 +86,16 @@ def event_details(event_id):
         can_manage = current_user.is_event_manager() and current_user.id == event.organizer_id
         if can_manage:
             registered_users = event.attendees.all()
-            
-    return render_template('event_details.html', 
+    
+        google_maps_api_key = 'AIzaSyDDJWUbZZL5Ln8ld0x6EUMQrdYblwgVDOI'
+    
+        return render_template('event_details.html', 
                          event=event,
                          current_time=datetime.now(),
                          is_attending=is_attending,
                          can_manage=can_manage,
-                         registered_users=registered_users)
+                         registered_users=registered_users,
+                         google_maps_api_key=google_maps_api_key)
 
 @main.route('/event/<int:event_id>/signup', methods=['POST'])
 @login_required
@@ -122,6 +125,7 @@ def cancel_signup(event_id):
 @login_required
 def edit_event(event_id):
     event = Event.query.get_or_404(event_id)
+    available_tags = Tag.query.all()  # Add this line
     if event.date < datetime.now():
         flash('This event has already passed. Editing is not allowed.', 'error')
         return redirect(url_for('main.event_details', event_id=event.id))
@@ -134,7 +138,7 @@ def edit_event(event_id):
             flash('Event updated successfully.')
             return redirect(url_for('main.event_details', event_id=event.id))
 
-    return render_template('edit_event.html', event=event)
+    return render_template('edit_event.html', event=event, available_tags=available_tags) 
 
 @main.route('/profile')
 @login_required
@@ -170,11 +174,12 @@ def create_event():
             flash('Event created successfully.')
             return redirect(url_for('main.event_details', event_id=new_event.id))
 
-    return render_template('create_event.html')
+    available_tags = Tag.query.all()
+    google_maps_api_key = os.getenv('AIzaSyDDJWUbZZL5Ln8ld0x6EUMQrdYblwgVDOI')
+    return render_template('create_event.html', available_tags=available_tags, google_maps_api_key=google_maps_api_key)
 
 def create_new_event(form_data, organizer_id):
-    # Process tags
-    tag_names = [tag.strip() for tag in form_data.get('tags', '').split(',') if tag.strip()]
+    tag_names = form_data.getlist('tags[]')
     tags = []
     for tag_name in tag_names:
         tag = Tag.query.filter_by(name=tag_name).first()
@@ -193,6 +198,12 @@ def create_new_event(form_data, organizer_id):
         image_url=form_data.get('image_url'),
         organizer_id=organizer_id
     )
+
+    api_key = current_app.config['GOOGLE_MAPS_API_KEY']
+    new_event.geocode_location(api_key)
+    
+    
+    
     db.session.add(new_event)
     db.session.commit()
     return new_event
@@ -323,7 +334,18 @@ def update_event(event, form_data):
     event.date = datetime.strptime(form_data.get('date'), '%Y-%m-%dT%H:%M')
     event.location = form_data.get('location')
     event.event_type = form_data.get('event_type')
-    event.tags = form_data.get('tags')
+    
+
+    tag_names = form_data.getlist('tags[]')
+    tags = []
+    for tag_name in tag_names:
+        tag = Tag.query.filter_by(name=tag_name).first()
+        if not tag:
+            tag = Tag(name=tag_name)
+            db.session.add(tag)
+        tags.append(tag)
+    event.tags = tags
+    
     event.image_url = form_data.get('image_url')
     db.session.commit()
     return True

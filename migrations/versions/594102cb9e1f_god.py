@@ -1,8 +1,8 @@
-"""tags
+"""god
 
-Revision ID: 06e9eaa16b08
+Revision ID: 594102cb9e1f
 Revises: 
-Create Date: 2024-12-08 19:03:34.861434
+Create Date: 2024-12-09 22:09:31.243869
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '06e9eaa16b08'
+revision = '594102cb9e1f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -51,6 +51,8 @@ def upgrade():
     sa.Column('description', sa.Text(), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=False),
     sa.Column('location', sa.String(length=100), nullable=False),
+    sa.Column('latitude', sa.Float(), nullable=True),
+    sa.Column('longitude', sa.Float(), nullable=True),
     sa.Column('event_type', sa.String(length=50), nullable=False),
     sa.Column('organizer_id', sa.Integer(), nullable=False),
     sa.Column('image_url', sa.String(length=200), nullable=True),

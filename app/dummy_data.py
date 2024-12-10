@@ -30,13 +30,15 @@ def create_dummy_data():
             db.session.commit()
             print('Users created.')
 
-   
-        # print("Initializing Eventbrite sync...")
-        # sync = EventbriteSync()
-        # stats = sync.sync_events()
-        # print(f'Eventbrite sync complete: {stats["new"]} new events, {stats["failed"]} failed')
+        # Create tags if they don't exist
+        if Tag.query.first() is None:
+            tags = ["tech", "innovation", "networking", "business", "lunch"]
+            for tag_name in tags:
+                tag = Tag(name=tag_name)
+                db.session.add(tag)
+            db.session.commit()
+            print('Tags created.')
 
-    
         if Event.query.first() is None:
             dummy_events = [
                 Event(
@@ -55,7 +57,7 @@ def create_dummy_data():
                     location="Downtown Business Center",
                     event_type="Networking",
                     organizer_id=2,
-                    image_url="https://example.com/business-lunch.jpg"
+                    image_url="https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 )
             ]
             for event in dummy_events:
@@ -66,22 +68,8 @@ def create_dummy_data():
             tech_conf = Event.query.filter_by(title="Tech Conference 2024").first()
             business_lunch = Event.query.filter_by(title="Business Networking Lunch").first()
 
-            tech_tags = ["tech", "innovation", "networking"]
-            business_tags = ["business", "networking", "lunch"]
-
-            for tag_name in tech_tags:
-                tag = Tag.query.filter_by(name=tag_name).first()
-                if not tag:
-                    tag = Tag(name=tag_name)
-                    db.session.add(tag)
-                tech_conf.tags.append(tag)
-
-            for tag_name in business_tags:
-                tag = Tag.query.filter_by(name=tag_name).first()
-                if not tag:
-                    tag = Tag(name=tag_name)
-                    db.session.add(tag)
-                business_lunch.tags.append(tag)
+            tech_conf.tags.extend(Tag.query.filter(Tag.name.in_(["tech", "innovation", "networking"])).all())
+            business_lunch.tags.extend(Tag.query.filter(Tag.name.in_(["business", "networking", "lunch"])).all())
 
             db.session.commit()
             print('Dummy events created with tags.')
@@ -91,4 +79,3 @@ def create_dummy_data():
     except Exception as e:
         print(f'An error occurred while creating dummy data: {str(e)}')
         db.session.rollback()
-

@@ -12,61 +12,66 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/auth.css') }}"
     />
-    {% block head %}{% endblock %}
   </head>
   <body>
     <div class="page-container">
-      <header>
-        <nav class="navbar">
-          <div class="navbar-brand">
-            <a href="{{ url_for('main.index') }}">Event Planner</a>
-          </div>
-          <ul class="navbar-nav">
-            {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
-            <li><a href="{{ url_for('main.settings') }}">Settings</a></li>
-            {% if current_user.is_event_manager() %}
-            <li>
-              <a href="{{ url_for('main.create_event') }}">Create Event</a>
-            </li>
-            {% endif %}
-            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-            {% else %}
-            <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-            <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
-            {% endif %}
-            <li class="nav-item">
-              <form
-                action="{{ url_for('main.search') }}"
-                method="GET"
-                class="search-form"
-              >
-                <input
-                  type="text"
-                  name="query"
-                  placeholder="Search events..."
-                  required
-                />
-                <button type="submit">Search</button>
-              </form>
-            </li>
-          </ul>
-        </nav>
-      </header>
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <a href="{{ url_for('main.index') }}">Event Planner</a>
+        </div>
+        <div class="hamburger">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <ul class="navbar-nav ml-auto">
+          <li><a href="{{ url_for('main.home') }}">Home</a></li>
+          {% if current_user.is_authenticated %}
+          <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
+          {% if current_user.is_event_manager() %}
+          <li><a href="{{ url_for('main.create_event') }}">Create Event</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('main.settings') }}">Settings</a></li>
+          <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+          {% else %}
+          <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+          <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
+          {% endif %}
+        </ul>
+        <form
+          class="search-form"
+          action="{{ url_for('main.search') }}"
+          method="GET"
+        >
+          <input type="text" name="query" placeholder="Search events..." />
+          <button type="submit">Search</button>
+        </form>
+      </nav>
 
-      <main class="content">
+      <div class="content">
         {% with messages = get_flashed_messages() %} {% if messages %}
         <div class="flashes">
           {% for message in messages %}
-          <div class="flash">{{ message }}</div>
+          <p>{{ message }}</p>
           {% endfor %}
         </div>
         {% endif %} {% endwith %} {% block content %}{% endblock %}
-      </main>
+      </div>
 
       <footer>
         <p>&copy; 2024 Event Planner. All rights reserved.</p>
       </footer>
     </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", (event) => {
+        const hamburger = document.querySelector(".hamburger");
+        const navbarNav = document.querySelector(".navbar-nav");
+
+        hamburger.addEventListener("click", () => {
+          navbarNav.classList.toggle("active");
+        });
+      });
+    </script>
   </body>
 </html>

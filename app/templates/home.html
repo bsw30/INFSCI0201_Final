@@ -3,45 +3,69 @@ block content %}
 <div class="container">
   <section class="welcome">
     <h1>Welcome back, {{ current_user.username }}!</h1>
-    <p>Here are some upcoming events you might be interested in:</p>
   </section>
 
   <section class="filters">
     <h2>Filter Events</h2>
-    <form action="{{ url_for('main.home') }}" method="GET">
-      <div class="form-group">
-        <label for="event_type">Event Type:</label>
-        <select name="event_type" id="event_type">
-          <option value="">All</option>
-          <option value="Conference">Conference</option>
-          <option value="Workshop">Workshop</option>
-          <option value="Seminar">Seminar</option>
-          <option value="Networking">Networking</option>
-          <option value="Webinar">Webinar</option>
-          <option value="Other">Other</option>
-        </select>
+    <form action="{{ url_for('main.home') }}" method="GET" class="filter-form">
+      <div class="filter-content">
+        <!-- Main filter fields in column -->
+        <div class="filter-fields">
+          <div class="form-group">
+            <label for="event_type">Event Type:</label>
+            <select name="event_type" id="event_type">
+              <option value="">All</option>
+              <option value="Conference">Conference</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Seminar">Seminar</option>
+              <option value="Networking">Networking</option>
+              <option value="Webinar">Webinar</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="start_date">Start Date:</label>
+            <input type="date" name="start_date" id="start_date" />
+          </div>
+
+          <div class="form-group">
+            <label for="end_date">End Date:</label>
+            <input type="date" name="end_date" id="end_date" />
+          </div>
+
+          <div class="form-group">
+            <label for="location">Location:</label>
+            <input type="text" name="location" id="location" />
+          </div>
+        </div>
+
+        <!-- Tags section full width below -->
+        <div class="tag-filter">
+          <span class="tag-filter-label">Filter by Tag:</span>
+          <div class="tag-filter-group">
+            <div class="tag-filter-option">
+              <input type="radio" name="tag" id="tag-all" value="" {% if not
+              request.args.get('tag') %}checked{% endif %}>
+              <label for="tag-all">All</label>
+            </div>
+
+            {% for tag in available_tags %}
+            <div class="tag-filter-option">
+              <input type="radio" name="tag" id="tag-{{ tag.name }}" value="{{
+              tag.name }}" {% if request.args.get('tag') == tag.name %}checked{%
+              endif %}>
+              <label for="tag-{{ tag.name }}">{{ tag.name }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Button below tags -->
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="start_date">Start Date:</label>
-        <input type="date" name="start_date" id="start_date" />
-      </div>
-      <div class="form-group">
-        <label for="end_date">End Date:</label>
-        <input type="date" name="end_date" id="end_date" />
-      </div>
-      <div class="form-group">
-        <label for="location">Location:</label>
-        <input type="text" name="location" id="location" />
-      </div>
-      <div class="form-group">
-        <label for="tags">Tags:</label>
-        <select name="tags" id="tags" multiple>
-          {% for tag in available_tags %}
-          <option value="{{ tag.name }}">{{ tag.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <button type="submit">Apply Filters</button>
     </form>
   </section>
 

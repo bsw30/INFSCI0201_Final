@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 from datetime import datetime
+import requests
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,11 +66,36 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String(100), nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
     event_type = db.Column(db.String(50), nullable=False)
     tags = db.relationship('Tag', secondary='event_tags', backref='events')
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     image_url = db.Column(db.String(200))
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def geocode_location(self, api_key):
+        """
+        Update latitude and longitude based on location string using Google Geocoding API
+        """
+        try:
+            base_url = "https://maps.googleapis.com/maps/api/geocode/json"
+            params = {
+                "address": self.location,
+                "key": api_key
+            }
+            response = requests.get(base_url, params=params)
+            data = response.json()
+            
+            if data["status"] == "OK":
+                location = data["results"][0]["geometry"]["location"]
+                self.latitude = location["lat"]
+                self.longitude = location["lng"]
+                return True
+            return False
+        except Exception as e:
+            print(f"Geocoding error: {str(e)}")
+            return False
 
     @property
     def attendee_count(self):
@@ -98,8 +124,7 @@ class Tag(db.Model):
 
 event_tags = db.Table('event_tags',
     db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True),
-    extend_existing=True
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
 )
 
 event_attendees = db.Table('event_attendees',
@@ -107,7 +132,6 @@ event_attendees = db.Table('event_attendees',
     db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
     db.Column('signup_date', db.DateTime, default=datetime.utcnow)
 )
-
 
 user_tag_subscriptions = db.Table('user_tag_subscriptions',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
@@ -118,4 +142,3 @@ user_organizer_subscriptions = db.Table('user_organizer_subscriptions',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('organizer_id', db.Integer, db.ForeignKey('organizer.id'), primary_key=True)
 )
-

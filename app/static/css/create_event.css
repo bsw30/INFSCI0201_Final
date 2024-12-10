@@ -1,4 +1,10 @@
-.event-form {
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.create-event-form {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
@@ -7,7 +13,52 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.event-form h1 {
+/* Add these new styles for tags */
+.tag-options {
+  display: inline-flex; /* Changed this */
+  flex-direction: row; /* Added this */
+  align-items: center; /* Added this */
+  gap: 10px;
+}
+
+/* Force it to be a row by removing flex-wrap */
+.tag-option {
+  display: inline-block;
+  position: relative;
+}
+
+.tag-option input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.tag-option label {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: #f1f1f1;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.tag-option input[type="checkbox"]:checked + label {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.tag-option label:hover {
+  background-color: #e9ecef;
+}
+
+.create-event-form h1 {
   text-align: center;
   margin-bottom: 20px;
 }
@@ -35,7 +86,7 @@ textarea.form-control {
   resize: vertical;
 }
 
-.btn-submit {
+.btn-primary {
   display: block;
   width: 100%;
   padding: 10px;
@@ -47,6 +98,22 @@ textarea.form-control {
   cursor: pointer;
 }
 
-.btn-submit:hover {
+.btn-primary:hover {
   background-color: #0056b3;
+}
+
+/* Additional styles for select elements */
+select.form-control {
+  height: auto;
+  padding: 10px;
+}
+
+select[multiple].form-control {
+  height: 150px;
+}
+
+.form-text {
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 5px;
 }

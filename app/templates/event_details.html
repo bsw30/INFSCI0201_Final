@@ -4,6 +4,13 @@ endblock %} {% block head %} {{ super() }}
   rel="stylesheet"
   href="{{ url_for('static', filename='css/event_pages.css') }}"
 />
+<style>
+  #map {
+    height: 400px;
+    width: 100%;
+    margin-top: 20px;
+  }
+</style>
 {% endblock %} {% block content %}
 <div class="event-details-container">
   <div class="event-header">
@@ -22,21 +29,46 @@ endblock %} {% block head %} {{ super() }}
     <p><strong>Location:</strong> {{ event.location }}</p>
     <p><strong>Event Type:</strong> {{ event.event_type }}</p>
     {% if event.tags %}
-    <p><strong>Tags:</strong> {{ event.tags }}</p>
+    <p>
+      <strong>Tags:</strong>
+      {% for tag in event.tags %}
+      <span class="tag">{{ tag.name }}</span>
+      {% endfor %}
+    </p>
     {% endif %}
   </div>
 
-  <div class="registered-users">
-    <h2>Registered Users</h2>
-    <p>Number of registered users: {{ event.attendees.count() }}</p>
-    {% if can_manage %}
-    <ul class="user-list">
-      {% for user in registered_users %}
-      <li>{{ user.username }} ({{ user.email }})</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-  </div>
+  <div id="map"></div>
+
+  <script>
+    function initMap() {
+      const geocoder = new google.maps.Geocoder();
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: { lat: 0, lng: 0 },
+      });
+      geocoder.geocode(
+        { address: "{{ event.location }}" },
+        (results, status) => {
+          if (status === "OK") {
+            map.setCenter(results[0].geometry.location);
+            new google.maps.Marker({
+              map: map,
+              position: results[0].geometry.location,
+            });
+          } else {
+            console.error("Geocoding failed: " + status);
+          }
+        }
+      );
+    }
+  </script>
+
+  <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDJWUbZZL5Ln8ld0x6EUMQrdYblwgVDOI&callback=initMap"
+  ></script>
 
   <div class="event-description">
     <h2>Description</h2>
@@ -48,8 +80,9 @@ endblock %} {% block head %} {{ super() }}
       href="{{ url_for('main.add_to_google_calendar', event_id=event.id) }}"
       class="btn btn-secondary"
       target="_blank"
-      >Add to Google Calendar</a
     >
+      Add to Google Calendar
+    </a>
   </div>
 
   {% if current_user.is_authenticated %}
@@ -92,19 +125,6 @@ endblock %} {% block head %} {{ super() }}
           Cancel Event
         </button>
       </form>
-    </div>
-
-    <div class="registered-users">
-      <h2>Registered Users</h2>
-      {% if registered_users %}
-      <ul class="user-list">
-        {% for user in registered_users %}
-        <li>{{ user.username }} ({{ user.email }})</li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p>No users have registered for this event yet.</p>
-      {% endif %}
     </div>
   </div>
   {% endif %}

@@ -67,14 +67,28 @@
       />
     </div>
     <div class="form-group">
-      <label for="tags">Tags</label>
-      <input
-        type="text"
-        id="tags"
-        name="tags"
-        value="{{ event.tags }}"
-        class="form-control"
-      />
+      <label>Tags</label>
+      <div class="tag-options">
+        {% for tag in available_tags %}
+        <div class="tag-option">
+          <input
+            type="checkbox"
+            name="tags[]"
+            id="tag-{{ tag.name }}"
+            value="{{ tag.name }}"
+            {%
+            if
+            tag
+            in
+            event.tags
+            %}checked{%
+            endif
+            %}
+          />
+          <label for="tag-{{ tag.name }}">{{ tag.name }}</label>
+        </div>
+        {% endfor %}
+      </div>
     </div>
     <div class="form-group">
       <label for="image_url">Image URL</label>

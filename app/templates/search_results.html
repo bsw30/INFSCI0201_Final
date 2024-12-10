@@ -3,6 +3,26 @@ content %}
 <div class="container">
   <h1>Search Results for "{{ query }}"</h1>
 
+  <section class="filters">
+    <h2>Filter Results</h2>
+    <form action="{{ url_for('main.search') }}" method="GET">
+      <input type="hidden" name="query" value="{{ query }}" />
+      <div class="form-group">
+        <label>Tags:</label>
+        <div class="tag-group">
+          {% for tag in tags %}
+          <label class="tag-checkbox">
+            <input type="checkbox" name="tags" value="{{ tag.name }}" {% if
+            tag.name in request.args.getlist('tags') %}checked{% endif %} /> {{
+            tag.name }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <button type="submit">Apply Filters</button>
+    </form>
+  </section>
+
   {% if events %}
   <section class="events">
     {% for event in events %}
@@ -11,7 +31,10 @@ content %}
       <p>Date: {{ event.date.strftime('%Y-%m-%d %H:%M') }}</p>
       <p>Location: {{ event.location }}</p>
       <p>Type: {{ event.event_type }}</p>
-      <p>Tags: {{ event.tags }}</p>
+      <p>
+        Tags: {% for tag in event.tags %}<span class="tag">{{ tag.name }}</span
+        >{% endfor %}
+      </p>
       <a
         href="{{ url_for('main.event_details', event_id=event.id) }}"
         class="button"

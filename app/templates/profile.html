@@ -59,11 +59,5 @@
     </div>
     {% endfor %}
   </div>
-
-  {% if current_user.is_event_manager() %}
-  <a href="{{ url_for('main.create_event') }}" class="btn btn-success"
-    >Create New Event</a
-  >
-  {% endif %}
 </div>
 {% endblock %}
